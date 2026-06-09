@@ -49,15 +49,32 @@ async def generate_answer(
         raise ValueError(f"Unknown LLM provider: {provider}")
 
 
-async def _gemini(user_msg: str) -> str:
-    import google.generativeai as genai
-    genai.configure(api_key=settings.gemini_api_key)
-    model = genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
-        
-        system_instruction=SYSTEM_PROMPT,
+def _get_gemini_client():
+    import os
+    from google import genai
+
+    if settings.google_application_credentials:
+        os.environ.setdefault(
+            "GOOGLE_APPLICATION_CREDENTIALS", settings.google_application_credentials
+        )
+    return genai.Client(
+        vertexai=True,
+        project=settings.google_cloud_project,
+        location=settings.google_cloud_location,
     )
-    response = model.generate_content(user_msg)
+
+
+async def _gemini(user_msg: str) -> str:
+    from google.genai import types
+
+    client = _get_gemini_client()
+    response = client.models.generate_content(
+        model=settings.gemini_model,
+        contents=user_msg,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+        ),
+    )
     return response.text
 
 

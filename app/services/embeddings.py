@@ -34,18 +34,33 @@ async def _openai_embeddings(texts: List[str]) -> List[List[float]]:
     return all_embeddings
 
 
-async def _gemini_embeddings(texts: List[str]) -> List[List[float]]:
-    import google.generativeai as genai
-    genai.configure(api_key=settings.gemini_api_key)
+def _get_gemini_client():
+    import os
+    from google import genai
 
+    if settings.google_application_credentials:
+        os.environ.setdefault(
+            "GOOGLE_APPLICATION_CREDENTIALS", settings.google_application_credentials
+        )
+    return genai.Client(
+        vertexai=True,
+        project=settings.google_cloud_project,
+        location=settings.google_cloud_location,
+    )
+
+
+async def _gemini_embeddings(texts: List[str]) -> List[List[float]]:
+    from google.genai import types
+
+    client = _get_gemini_client()
     all_embeddings = []
     for text in texts:
-        result = genai.embed_content(
-            model="models/gemini-embedding-001",
-            content=text,
-            task_type="retrieval_document",
+        result = client.models.embed_content(
+            model=settings.gemini_embedding_model,
+            contents=text,
+            config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT"),
         )
-        all_embeddings.append(result["embedding"])
+        all_embeddings.append(list(result.embeddings[0].values))
     return all_embeddings
 
 
@@ -63,13 +78,14 @@ async def get_query_embedding(query: str) -> List[float]:
         return response.data[0].embedding
 
     elif provider == "gemini":
-        import google.generativeai as genai
-        genai.configure(api_key=settings.gemini_api_key)
-        result = genai.embed_content(
-            model="models/gemini-embedding-001",
-            content=query,
-            task_type="retrieval_query",
+        from google.genai import types
+
+        client = _get_gemini_client()
+        result = client.models.embed_content(
+            model=settings.gemini_embedding_model,
+            contents=query,
+            config=types.EmbedContentConfig(task_type="RETRIEVAL_QUERY"),
         )
-        return result["embedding"]
+        return list(result.embeddings[0].values)
 
     raise ValueError(f"Unknown embedding provider: {provider}")
