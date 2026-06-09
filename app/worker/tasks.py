@@ -57,6 +57,22 @@ def ingest_pdf_task(self, pdf_id: str, pdf_name: str, save_path: str):
             },
         )
 
+        # Per-page embedding cost estimate (text-embedding-004: $0.000025 per 1K chars)
+        page_chars: dict = {}
+        for rec in result["records"]:
+            pg = rec["metadata"]["page_number"]
+            page_chars[pg] = page_chars.get(pg, 0) + rec["metadata"]["char_count"]
+
+        total_chars = sum(page_chars.values())
+        for pg, chars in sorted(page_chars.items()):
+            pg_cost = (chars / 1_000) * 0.000025
+            logger.info("  Page %d — %d chars | embedding ~$%.6f", pg, chars, pg_cost)
+        total_embed_cost = (total_chars / 1_000) * 0.000025
+        logger.info(
+            "Ingest cost summary [%s] — %d pages | %d chunks | %d total chars | embedding ~$%.6f",
+            pdf_name, result["total_pages"], len(result["records"]), total_chars, total_embed_cost,
+        )
+
         store = VectorStore()
         _run_async(store.ensure_collection())
         _run_async(store.upsert_records(result["records"]))

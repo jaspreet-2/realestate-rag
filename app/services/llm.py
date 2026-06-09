@@ -4,6 +4,9 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+_LLM_INPUT_PER_1M  = 0.15   # USD per 1M input tokens  (gemini-2.5-flash, non-thinking)
+_LLM_OUTPUT_PER_1M = 0.60   # USD per 1M output tokens
+
 SYSTEM_PROMPT = """You are an expert real estate document analyst.
 You are given context chunks extracted from property documents (deeds, agreements, listings, survey reports).
 The documents may be in English, Hindi, Bengali, or other Indian languages.
@@ -75,6 +78,16 @@ async def _gemini(user_msg: str) -> str:
             system_instruction=SYSTEM_PROMPT,
         ),
     )
+
+    usage = response.usage_metadata
+    in_tok  = usage.prompt_token_count or 0
+    out_tok = usage.candidates_token_count or 0
+    cost = (in_tok / 1_000_000) * _LLM_INPUT_PER_1M + (out_tok / 1_000_000) * _LLM_OUTPUT_PER_1M
+    logger.info(
+        "LLM cost [%s] — input: %d tokens | output: %d tokens | ~$%.6f",
+        settings.gemini_model, in_tok, out_tok, cost,
+    )
+
     return response.text
 
 

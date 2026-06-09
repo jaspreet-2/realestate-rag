@@ -4,6 +4,9 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+_EMBED_PRICE_PER_1K_CHARS = 0.000025   # USD per 1,000 characters (text-embedding-004, Vertex AI)
+
+
 
 async def get_embeddings(texts: List[str]) -> List[List[float]]:
     """Return dense embeddings for a list of texts."""
@@ -54,6 +57,7 @@ async def _gemini_embeddings(texts: List[str]) -> List[List[float]]:
 
     client = _get_gemini_client()
     all_embeddings = []
+    total_chars = 0
     for text in texts:
         result = client.models.embed_content(
             model=settings.gemini_embedding_model,
@@ -61,6 +65,13 @@ async def _gemini_embeddings(texts: List[str]) -> List[List[float]]:
             config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT"),
         )
         all_embeddings.append(list(result.embeddings[0].values))
+        total_chars += len(text)
+
+    cost = (total_chars / 1_000) * _EMBED_PRICE_PER_1K_CHARS
+    logger.info(
+        "Embedding cost [%s] — %d chunks | %d chars | ~$%.6f",
+        settings.gemini_embedding_model, len(texts), total_chars, cost,
+    )
     return all_embeddings
 
 
@@ -85,6 +96,11 @@ async def get_query_embedding(query: str) -> List[float]:
             model=settings.gemini_embedding_model,
             contents=query,
             config=types.EmbedContentConfig(task_type="RETRIEVAL_QUERY"),
+        )
+        cost = (len(query) / 1_000) * _EMBED_PRICE_PER_1K_CHARS
+        logger.info(
+            "Query embedding cost [%s] — %d chars | ~$%.6f",
+            settings.gemini_embedding_model, len(query), cost,
         )
         return list(result.embeddings[0].values)
 

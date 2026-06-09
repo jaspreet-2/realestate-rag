@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     # Gemini model names (configurable per deployment)
     gemini_model: str = "gemini-2.5-flash"
     gemini_embedding_model: str = "text-embedding-004"
+    # Vertex AI pricing — verify at cloud.google.com/vertex-ai/generative-ai/pricing
+    _EMBED_PRICE_PER_1K_CHARS = 0.000025   # USD per 1,000 characters (text-embedding-004)
+    _LLM_INPUT_PER_1M  = 0.15   # USD per 1M input tokens  (gemini-2.5-flash, non-thinking)
+    _LLM_OUTPUT_PER_1M = 0.60   # USD per 1M output tokens
+
+
 
     upload_dir: str = "/app/uploads"
     chunk_size: int = 600
