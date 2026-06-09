@@ -149,3 +149,6 @@ temp/
 tmp/
 *.tar.gz
 *.zip
+
+# Folders
+uploads/
