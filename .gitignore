@@ -1,0 +1,151 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+.env
+.env.local
+.env.*.local
+
+# FastAPI
+*.log
+.DS_Store
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# IDE and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+*.iml
+.project
+.pydevproject
+.settings/
+*.sublime-settings
+
+# Vector Database
+# Chroma
+.chroma/
+chroma_db/
+
+# Weaviate
+weaviate_data/
+
+# Milvus
+milvus_data/
+./volumes/
+
+# Pinecone
+.pinecone/
+
+# Supabase Vector
+pgdata/
+
+# LangChain cache
+.langchain_cache/
+
+# Vector embeddings and cached data
+*.pkl
+*.pickle
+*.joblib
+embeddings/
+vector_store/
+cached_embeddings/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.pdb
+*.mdb
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Local configuration
+config.local.py
+settings.local.py
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+.directory
+.AppleDouble
+.LSOverride
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# IDEs temp files
+*.tmp
+*.bak
+
+# Development artifacts
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+*.ipynb
+
+# Node modules (if using frontend tools)
+node_modules/
+npm-debug.log
+
+# MacOS
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Miscellaneous
+.cache/
+.temp/
+temp/
+tmp/
+*.tar.gz
+*.zip
