@@ -37,6 +37,7 @@ services:
       - COLLECTION_NAME=realestate_docs
       - REDIS_URL=redis://redis:6379/0
     volumes:
+      - ./app:/app/app
       - ./uploads:/app/uploads
       - ./credentials:/app/credentials:ro
     depends_on:
@@ -63,6 +64,7 @@ services:
       - COLLECTION_NAME=realestate_docs
       - REDIS_URL=redis://redis:6379/0
     volumes:
+      - ./app:/app/app
       - ./uploads:/app/uploads
       - ./credentials:/app/credentials:ro
     depends_on:
