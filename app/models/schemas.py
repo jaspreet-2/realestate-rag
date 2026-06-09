@@ -26,6 +26,14 @@ class IngestResponse(BaseModel):
     warnings: List[str] = []
 
 
+class IngestAccepted(BaseModel):
+    task_id: str
+    pdf_id: str
+    pdf_name: str
+    status: str
+    message: str
+
+
 class QueryRequest(BaseModel):
     query: str
     top_k: int = 5

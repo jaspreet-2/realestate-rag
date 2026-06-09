@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     collection_name: str = "realestate_docs"
 
     llm_provider: Literal["gemini", "openai", "anthropic"] = "gemini"
-    embedding_provider: Literal["openai", "gemini"] = "openai"
+    embedding_provider: Literal["openai", "gemini"] = "gemini"
 
     openai_api_key: str = ""
     anthropic_api_key: str = ""
@@ -18,11 +18,10 @@ class Settings(BaseSettings):
     chunk_size: int = 600
     chunk_overlap: int = 80
 
-    # Dense vector dimension: 1536 for OpenAI, 768 for Gemini
-    # vector_size: int = 1536
-    # using for gemini
+    # 3072 for gemini-embedding-001, 1536 for OpenAI, 768 for text-embedding-004
     vector_size: int = 3072
 
+    redis_url: str = "redis://redis:6379/0"
 
     class Config:
         env_file = ".env"

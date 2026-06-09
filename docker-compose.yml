@@ -11,6 +11,13 @@ services:
       - qdrant_data:/qdrant/storage
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   api:
     build: .
     container_name: realestate-api
@@ -23,12 +30,35 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
-      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-openai}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-gemini}
       - COLLECTION_NAME=realestate_docs
+      - REDIS_URL=redis://redis:6379/0
     volumes:
       - ./uploads:/app/uploads
     depends_on:
       - qdrant
+      - redis
+    restart: unless-stopped
+
+  worker:
+    build: .
+    container_name: realestate-worker
+    command: celery -A app.worker.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-gemini}
+      - COLLECTION_NAME=realestate_docs
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - qdrant
+      - redis
     restart: unless-stopped
 
 volumes:
