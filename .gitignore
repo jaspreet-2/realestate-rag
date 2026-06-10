@@ -155,3 +155,6 @@ uploads/
 
 # Google Cloud service account credentials — NEVER commit these
 credentials/
+
+
+/*.sh
