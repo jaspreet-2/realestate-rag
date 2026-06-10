@@ -3,13 +3,14 @@ import uuid
 import shutil
 import logging
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from typing import List
 from celery.result import AsyncResult
 
 from app.core.config import settings
 from app.worker.tasks import ingest_pdf_task
 from app.worker.celery_app import celery_app
 from app.services.vector_store import VectorStore
-from app.models.schemas import IngestResponse, IngestAccepted
+from app.models.schemas import IngestResponse, IngestAccepted, BulkIngestAccepted, BulkIngestItem
 
 router = APIRouter(prefix="/ingest", tags=["Ingest"])
 logger = logging.getLogger(__name__)
@@ -39,6 +40,63 @@ async def upload_pdf(file: UploadFile = File(...)):
         pdf_name=file.filename,
         status="queued",
         message="PDF queued for processing. Poll /ingest/status/{task_id} for updates.",
+    )
+
+
+@router.post("/upload-bulk", response_model=BulkIngestAccepted, status_code=202)
+async def upload_pdfs_bulk(files: List[UploadFile] = File(...)):
+    """Upload multiple PDFs at once. Each file is queued independently."""
+    os.makedirs(settings.upload_dir, exist_ok=True)
+
+    results: list[BulkIngestItem] = []
+    queued = 0
+    failed = 0
+
+    for file in files:
+        if not file.filename.lower().endswith(".pdf"):
+            results.append(BulkIngestItem(
+                task_id="",
+                pdf_id="",
+                pdf_name=file.filename,
+                status="rejected",
+                message="Only PDF files are accepted.",
+            ))
+            failed += 1
+            continue
+
+        pdf_id = str(uuid.uuid4())
+        save_path = os.path.join(settings.upload_dir, f"{pdf_id}.pdf")
+
+        try:
+            with open(save_path, "wb") as f:
+                shutil.copyfileobj(file.file, f)
+        except Exception as e:
+            logger.error("Failed to save %s: %s", file.filename, e)
+            results.append(BulkIngestItem(
+                task_id="",
+                pdf_id=pdf_id,
+                pdf_name=file.filename,
+                status="failed",
+                message=f"Failed to save file: {e}",
+            ))
+            failed += 1
+            continue
+
+        task = ingest_pdf_task.delay(pdf_id, file.filename, save_path)
+        results.append(BulkIngestItem(
+            task_id=task.id,
+            pdf_id=pdf_id,
+            pdf_name=file.filename,
+            status="queued",
+            message="PDF queued for processing. Poll /ingest/status/{task_id} for updates.",
+        ))
+        queued += 1
+
+    return BulkIngestAccepted(
+        total=len(files),
+        queued=queued,
+        failed=failed,
+        results=results,
     )
 
 

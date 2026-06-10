@@ -34,6 +34,21 @@ class IngestAccepted(BaseModel):
     message: str
 
 
+class BulkIngestItem(BaseModel):
+    task_id: str
+    pdf_id: str
+    pdf_name: str
+    status: str
+    message: str
+
+
+class BulkIngestAccepted(BaseModel):
+    total: int
+    queued: int
+    failed: int
+    results: List[BulkIngestItem]
+
+
 class QueryRequest(BaseModel):
     query: str
     top_k: int = 5
